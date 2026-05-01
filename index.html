@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Norma — релиз Alpha · Скоуп 8 мая</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fafbfc;
+    --bg-grad: linear-gradient(180deg, #fafbfc 0%, #f3f5f9 100%);
+    --card: #ffffff;
+    --card-2: #f7f8fb;
+    --border: #e6e8ef;
+    --border-strong: #d0d4dd;
+    --fg: #131720;
+    --fg-2: #3a4151;
+    --muted: #6c7388;
+    --muted-2: #9aa1b3;
+    --accent: #5b6cff;
+    --accent-soft: #eef0ff;
+    --done: #16a067;
+    --done-soft: #d8f5e6;
+    --done-soft-2: #e3f6ec;
+    --in-prog: #ca8a04;
+    --in-prog-soft: #fef9c3;
+    --orange: #ea580c;
+    --orange-soft: #ffedd5;
+    --ready: #0891b2;
+    --ready-soft: #e1f5fa;
+    --backlog: #6c7388;
+    --backlog-soft: #eef0f4;
+    --blocked: #dc2626;
+    --blocked-soft: #fde7e7;
+    --shadow: 0 1px 2px rgba(15,20,30,0.04), 0 4px 16px rgba(15,20,30,0.04);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 15px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+  body { background: var(--bg-grad); min-height: 100vh; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  /* ---- Header ---- */
+  .header { background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+    padding: 30px 32px; box-shadow: var(--shadow); margin-bottom: 24px; }
+  .header .eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 11.5px;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+  .header h1 { font-size: 30px; font-weight: 700; margin: 0 0 8px; letter-spacing: -0.02em; color: var(--fg); }
+  .release-date { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px;
+    background: var(--accent-soft); color: var(--accent); border-radius: 999px;
+    font-size: 13px; font-weight: 600; margin-bottom: 18px; }
+  .release-date::before { content: "🚀"; font-size: 14px; }
+  .lead { color: var(--fg-2); font-size: 15.5px; line-height: 1.7; max-width: 760px; margin: 0; }
+  .lead b { color: var(--fg); }
+  .lead p { margin: 0 0 10px; }
+  .lead p:last-child { margin: 0; }
+
+  /* Overall progress strip */
+  .overall { margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .overall-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .overall-label { font-size: 13px; color: var(--muted); font-weight: 500; }
+  .progress-bar { flex: 1; min-width: 180px; height: 8px; background: var(--card-2);
+    border-radius: 999px; overflow: hidden; position: relative; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--done) 0%, #22c55e 100%);
+    border-radius: 999px; transition: width .4s ease; }
+  .progress-stats { font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: var(--fg-2); font-variant-numeric: tabular-nums; }
+  .progress-stats .done-num { color: var(--done); font-weight: 600; }
+  .progress-stats .total-num { color: var(--muted); }
+
+  .sources { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 16px; }
+  .sources a { color: var(--muted); text-decoration: none; font-size: 12.5px;
+    padding: 5px 11px; border-radius: 6px; background: var(--card-2);
+    border: 1px solid var(--border); transition: all .15s; }
+  .sources a:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* ---- Section heading ---- */
+  .section-h { display: flex; align-items: baseline; gap: 12px; margin: 32px 4px 14px; }
+  .section-h h2 { font-size: 20px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+  .section-h .h-meta { color: var(--muted); font-size: 13px; }
+
+  /* ---- Block (4 main + 1 nice-to-have) ---- */
+  .block { background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+    margin-bottom: 18px; box-shadow: var(--shadow); overflow: hidden; }
+  .block > summary { list-style: none; cursor: pointer; padding: 22px 28px; user-select: none;
+    display: grid; grid-template-columns: 44px 1fr auto; align-items: center; gap: 16px; }
+  .block > summary::-webkit-details-marker { display: none; }
+  .block-icon { width: 44px; height: 44px; border-radius: 12px; display: inline-flex;
+    align-items: center; justify-content: center; font-size: 22px; }
+  .block.payment .block-icon { background: var(--accent-soft); color: var(--accent); }
+  .block.notif   .block-icon { background: var(--orange-soft); color: var(--orange); }
+  .block.loyalty .block-icon { background: var(--done-soft); color: var(--done); }
+  .block.other   .block-icon { background: var(--ready-soft); color: var(--ready); }
+  .block.nice    .block-icon { background: var(--backlog-soft); color: var(--muted); }
+  .block-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .block-title { font-size: 19px; font-weight: 600; letter-spacing: -0.01em; color: var(--fg); }
+  .block-tagline { font-size: 13px; color: var(--muted); }
+  .block-progress { display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
+    min-width: 140px; }
+  .block-progress .pb { width: 130px; height: 6px; background: var(--card-2);
+    border-radius: 999px; overflow: hidden; }
+  .block-progress .pf { height: 100%; background: var(--done); border-radius: 999px; }
+  .block-progress .pn { font-family: 'JetBrains Mono', monospace; font-size: 12.5px;
+    color: var(--fg-2); font-variant-numeric: tabular-nums; }
+  .block-progress .pn b { color: var(--done); font-weight: 600; }
+  .chevron { width: 16px; height: 16px; color: var(--muted-2); transition: transform .2s; }
+  .block[open] .chevron { transform: rotate(90deg); }
+
+  .block-body { border-top: 1px solid var(--border); padding: 22px 28px 24px; }
+  .scope-desc { background: var(--card-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px 18px; margin-bottom: 20px; font-size: 14px;
+    color: var(--fg-2); line-height: 1.65; }
+  .scope-desc p { margin: 0 0 8px; }
+  .scope-desc p:last-child { margin: 0; }
+  .scope-desc b { color: var(--fg); }
+  .scope-desc .label { display: inline-block; font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 4px; margin-right: 6px; vertical-align: 1.5px; }
+  .label.must { background: var(--blocked-soft); color: var(--blocked); }
+  .label.no   { background: var(--backlog-soft); color: var(--muted); }
+
+  .tasks-h { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--muted); font-weight: 600; margin: 4px 0 10px; }
+  .tasks { list-style: none; padding: 0; margin: 0; }
+  .tasks > li { display: grid; grid-template-columns: 18px 1fr auto; gap: 12px;
+    padding: 11px 0; border-bottom: 1px dashed var(--border); align-items: start; }
+  .tasks > li:last-child { border-bottom: none; }
+  .tick { width: 18px; height: 18px; border-radius: 50%; display: inline-flex;
+    align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+    font-size: 11px; font-weight: 700; }
+  .tick.done { background: var(--done); color: #fff; }
+  .tick.doing { background: var(--in-prog-soft); color: var(--in-prog); border: 1.5px solid var(--in-prog); }
+  .tick.doing::before { content: ""; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--in-prog); animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
+  .task-body { min-width: 0; }
+  .task-text { font-size: 14.5px; line-height: 1.5; color: var(--fg); }
+  .task-text.done-text { color: var(--fg-2); }
+  .task-meta { display: flex; gap: 8px; align-items: center; margin-top: 4px; flex-wrap: wrap; }
+  .src { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--muted);
+    text-decoration: none; }
+  .src:hover { color: var(--accent); }
+  .status-pill { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 999px;
+    letter-spacing: 0.02em; white-space: nowrap; flex-shrink: 0; }
+  .status-pill.done { background: var(--done-soft); color: var(--done); }
+  .status-pill.doing { background: var(--in-prog-soft); color: var(--in-prog); }
+
+  /* ---- Nice-to-have / post-release block ---- */
+  .block.nice .block-body { padding-top: 18px; }
+  .nice-list { list-style: none; padding: 0; margin: 0; }
+  .nice-list li { display: grid; grid-template-columns: 24px 1fr; gap: 10px; padding: 10px 0;
+    border-bottom: 1px dashed var(--border); }
+  .nice-list li:last-child { border-bottom: none; }
+  .nice-list .ic { color: var(--muted-2); font-size: 14px; line-height: 1.5; }
+  .nice-list .nl-text { font-size: 14.5px; color: var(--fg-2); line-height: 1.55; }
+  .nice-list .nl-text b { color: var(--fg); }
+
+  footer { text-align: center; color: var(--muted-2); font-size: 12.5px; margin-top: 40px; }
+  footer a { color: var(--muted); }
+
+  @media (max-width: 720px) {
+    .wrap { padding: 24px 16px 60px; }
+    .header { padding: 24px 20px; }
+    .header h1 { font-size: 22px; }
+    .block > summary { grid-template-columns: 36px 1fr; padding: 18px 20px; row-gap: 10px; }
+    .block-icon { width: 36px; height: 36px; font-size: 18px; }
+    .block-progress { grid-column: 1 / -1; flex-direction: row; align-items: center;
+      justify-content: flex-start; min-width: 0; }
+    .chevron { display: none; }
+    .block-body { padding: 18px 20px 22px; }
+    .tasks > li { grid-template-columns: 18px 1fr; }
+    .tasks > li .status-pill { grid-column: 2; justify-self: flex-start; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="header">
+    <div class="eyebrow">Release scope · Norma · Alpha</div>
+    <h1>Релиз приложения Norma</h1>
+    <div class="release-date">Дата релиза: 8 мая 2026</div>
+    <div class="lead">
+      <p>На этой странице — <b>скоуп первого продуктового релиза Norma</b>: что войдёт в&nbsp;версию для пользователей 8&nbsp;мая, в&nbsp;каком статусе сейчас каждая задача и&nbsp;что осталось на&nbsp;пост-релиз.</p>
+      <p>Релиз разделён на&nbsp;четыре функциональных блока — <b>Оплата</b>, <b>Уведомления</b>, <b>Лояльность</b> и&nbsp;<b>Прочее</b> (баги, тех-долг, улучшения). По&nbsp;каждому блоку показано короткое описание возможностей и&nbsp;список задач, переформулированных от&nbsp;лица клиента: какую возможность даёт каждая задача. Внизу — <b>Nice&#8209;to&#8209;have</b>: что не&nbsp;вошло в&nbsp;первый релиз и&nbsp;будет реализовано позже.</p>
+    </div>
+
+    <div class="overall">
+      <div class="overall-row">
+        <span class="overall-label">Прогресс по релизу</span>
+        <div class="progress-bar"><div class="progress-fill" style="width:21%"></div></div>
+        <div class="progress-stats"><span class="done-num">8</span> / <span class="total-num">38</span> задач сделано</div>
+      </div>
+    </div>
+
+    <div class="sources">
+      <a href="https://github.com/orgs/x2-agency/projects/9" target="_blank" rel="noopener">📱 Mobile App</a>
+      <a href="https://github.com/orgs/x2-agency/projects/7" target="_blank" rel="noopener">🖥 Frontend</a>
+      <a href="https://github.com/orgs/x2-agency/projects/4" target="_blank" rel="noopener">⚙ Backend</a>
+      <a href="https://x2-agency.github.io/norma-status/" target="_blank" rel="noopener">📊 Статус задач</a>
+    </div>
+  </header>
+
+  <div class="section-h"><h2>Что войдёт в релиз</h2><span class="h-meta">4 блока · только Must-have</span></div>
+
+  <!-- ===================== ОПЛАТА ===================== -->
+  <details class="block payment" open>
+    <summary>
+      <span class="block-icon">💳</span>
+      <div class="block-meta">
+        <span class="block-title">Оплата</span>
+        <span class="block-tagline">Все способы онлайн-оплаты и СБП-оплата курьеру</span>
+      </div>
+      <div class="block-progress">
+        <div class="pb"><div class="pf" style="width:33%"></div></div>
+        <div class="pn"><b>1</b> / 3 сделано</div>
+      </div>
+      <svg class="chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4l4 4-4 4"/></svg>
+    </summary>
+    <div class="block-body">
+
+      <div class="scope-desc">
+        <p><span class="label must">Входит в релиз</span> Клиент может оплатить заказ <b>картой онлайн</b> или <b>через СБП онлайн</b>, получает <b>фискальный чек</b>, может <b>оформить возврат по чеку</b>, а курьеру оплачивает <b>через СБП</b>.</p>
+        <p><span class="label no">Не входит</span> Оплата курьеру банковской картой и модуль matching — отложены в Nice-to-have.</p>
+      </div>
+
+      <div class="tasks-h">Задачи в релизе · 3</div>
+      <ul class="tasks">
+
+        <li>
+          <span class="tick done" title="Сделано">✓</span>
+          <div class="task-body">
+            <div class="task-text done-text">Клиент может оплатить курьеру через СБП — оплата проходит через интеграцию с Телетрек.</div>
+            <div class="task-meta">
+              <a class="src" href="https://github.com/x2-agency/norma-backend/issues/68" target="_blank" rel="noopener">norma-backend#68</a>
+            </div>
+          </div>
+          <span class="status-pill done">Сделано</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="Делается"></span>
+          <div class="task-body">
+            <div class="task-text">Стоимость доставки корректно учитывается в учётных системах — сумма передаётся в АГБИС и Максма при создании заказа.</div>
+            <div class="task-meta">
+              <a class="src" href="https://github.com/x2-agency/norma-backend/issues/66" target="_blank" rel="noopener">norma-backend#66</a>
+            </div>
+          </div>
+          <span class="status-pill doing">Делается</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="Делается"></span>
+          <div class="task-body">
+            <div class="task-text">Фикс бага с пропуском стоимости доставки — гарантируем, что сумма доставки попадает в АГБИС и Максма во всех сценариях.</div>
+            <div class="task-meta">
+              <a class="src" href="https://github.com/x2-agency/norma-backend/issues/46" target="_blank" rel="noopener">norma-backend#46</a>
+            </div>
+          </div>
+          <span class="status-pill doing">Делается</span>
+        </li>
+
+      </ul>
+    </div>
+  </details>
+
+  <!-- ===================== УВЕДОМЛЕНИЯ ===================== -->
+  <details class="block notif" open>
+    <summary>
+      <span class="block-icon">🔔</span>
+      <div class="block-meta">
+        <span class="block-title">Уведомления</span>
+        <span class="block-tagline">Ручная отправка из админки + 3 группы автоматических триггеров</span>
+      </div>
+      <div class="block-progress">
+        <div class="pb"><div class="pf" style="width:33%"></div></div>
+        <div class="pn"><b>2</b> / 6 сделано</div>
+      </div>
+      <svg class="chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4l4 4-4 4"/></svg>
+    </summary>
+    <div class="block-body">
+
+      <div class="scope-desc">
+        <p><span class="label must">Входит в релиз</span> Оператор может <b>вручную отправить уведомление</b> выбранному клиенту из админки. Автоматические уведомления приходят по&nbsp;<b>трём группам триггеров</b>: действия пользователя — <b>12&nbsp;шт.</b>, изменения статуса и&nbsp;операционные события — <b>21&nbsp;шт.</b>, исключения и&nbsp;негативные сценарии — <b>13&nbsp;шт.</b></p>
+        <p><span class="label no">Не входит</span> Остальные группы триггеров — отложены в Nice-to-have.</p>
+      </div>
+
+      <div class="tasks-h">Задачи в релизе · 6</div>
+      <ul class="tasks">
+
+        <li>
+          <span class="tick done" title="Сделано">✓</span>
+          <div class="task-body">
+            <div class="task-text done-text">Оператор может вручную отправить уведомление с выбором типа клиента — выбираете клиента из списка и шлёте сообщение.</div>
+            <div class="task-meta">
+              <a class="src" href="https://github.com/x2-agency/norma-backend/issues/69" target="_blank" rel="noopener">norma-backend#69</a>
+            </div>
+          </div>
+          <span class="status-pill done">Сделано</span>
+        </li>
+
+        <li>
+          <span class="tick done" title="Сделано">✓</span>
+          <div class="task-body">
+            <div class="task-text done-text">В админке появился раздел ручной отправки уведомлений — интерфейс готов и подключён к бэку.</div>
+            <div class="task-meta">
+              <a class="src" href="https://github.com/x2-agency/norma-backend/pull/76" target="_blank" rel="noopener">norma-backend#76</a>
+            </div>
+          </div>
+          <span class="status-pill done">Сделано</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="Делается"></span>
+          <div class="task-body">
+            <div class="task-text">Клиент получает push- и in-app-уведомления в приложении — подключение через нативные каналы доставки.</div>
+            <div class="task-meta">
+              <a class="src" href="https://github.com/x2-agency/norma-app/issues/263" target="_blank" rel="noopener">norma-app#263</a>
+            </div>
+          </div>
+          <span class="status-pill doing">Делается</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="Делается"></span>
+          <div class="task-body">
+            <div class="task-text">В мобильном приложении работает единый сценарий уведомлений — экраны, состояния, переходы.</div>
+            <div class="task-meta">
+              <a class="src" href="https://github.com/x2-agency/norma-app/issues/255" target="_blank" rel="noopener">norma-app#255</a>
+            </div>
+          </div>
+          <span class="status-pill doing">Делается</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="Делается"></span>
+          <div class="task-body">
+            <div class="task-text">Автоматические уведомления по 3 группам триггеров: действия пользователя, изменения статуса, исключения — отправляются по событиям без участия оператора.</div>
+            <div class="task-meta">
+              <a class="src" href="https://github.com/x2-agency/norma-backend/issues/70" target="_blank" rel="noopener">norma-backend#70</a>
+            </div>
+          </div>
+          <span class="status-pill doing">Делается</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="Делается"></span>
+          <div class="task-body">
+            <div class="task-text">Клиент получает уведомления по курьерским событиям, отменам заказа и таймерам отложенных триггеров.</div>
+            <div class="task-meta">
+              <a class="src" href="https://github.com/x2-agency/norma-backend/issues/15" target="_blank" rel="noopener">norma-backend#15</a>
+            </div>
+          </div>
+          <span class="status-pill doing">Делается</span>
+        </li>
+
+      </ul>
+    </div>
+  </details>
+
+  <!-- ===================== ЛОЯЛЬНОСТЬ ===================== -->
+  <details class="block loyalty" open>
+    <summary>
+      <span class="block-icon">🎁</span>
+      <div class="block-meta">
+        <span class="block-title">Лояльность</span>
+        <span class="block-tagline">Бонусы, реферальная программа и синхронизация АГБИС ↔ Максма</span>
+      </div>
+      <div class="block-progress">
+        <div class="pb"><div class="pf" style="width:0%"></div></div>
+        <div class="pn"><b>0</b> / 3 сделано</div>
+      </div>
+      <svg class="chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4l4 4-4 4"/></svg>
+    </summary>
+    <div class="block-body">
+
+      <div class="scope-desc">
+        <p><span class="label must">Входит в релиз</span> Программа лояльности работает и&nbsp;для заказов из&nbsp;<b>АГБИС</b>, и&nbsp;для заказов из&nbsp;<b>бэта</b>: <b>начисление</b> и&nbsp;<b>списание бонусов</b>, <b>реферальная программа</b> (кто приводит — получает бонус, конкретного реферала пока не&nbsp;видно), <b>синхронизация заказов АГБИС ↔ Максма</b> в&nbsp;обе стороны.</p>
+        <p><span class="label no">Не входит</span> <b>Скидки от&nbsp;акций</b> — сами акции в&nbsp;Максма не&nbsp;сохраняются, реализовать не&nbsp;получится. Полная <b>синхронизация баланса клиентов</b> — пока в&nbsp;проработке.</p>
+      </div>
+
+      <div class="tasks-h">Задачи в релизе · 3</div>
+      <ul class="tasks">
+
+        <li>
+          <span class="tick doing" title="Делается"></span>
+          <div class="task-body">
+            <div class="task-text">Бонусы и история лояльности синхронизируются между АГБИС, бэком и Максма в обе стороны — заказ из любой системы корректно учитывается в программе лояльности.</div>
+            <div class="task-meta">
+              <a class="src" href="https://github.com/x2-agency/norma-backend/issues/67" target="_blank" rel="noopener">norma-backend#67</a>
+            </div>
+          </div>
+          <span class="status-pill doing">Делается</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="Делается"></span>
+          <div class="task-body">
+            <div class="task-text">Оператор может вручную списать бонусы клиенту и применить произвольную скидку при создании заказа в Максма.</div>
+            <div class="task-meta">
+              <a class="src" href="https://github.com/x2-agency/norma-backend/issues/48" target="_blank" rel="noopener">norma-backend#48</a>
+            </div>
+          </div>
+          <span class="status-pill doing">Делается</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="Делается"></span>
+          <div class="task-body">
+            <div class="task-text">В секции списания баллов клиент видит только сумму к списанию, а не общий баланс — устраняем путаницу при оформлении заказа.</div>
+            <div class="task-meta">
+              <a class="src" href="https://github.com/x2-agency/norma-backend/issues/79" target="_blank" rel="noopener">norma-backend#79</a>
+            </div>
+          </div>
+          <span class="status-pill doing">Делается</span>
+        </li>
+
+      </ul>
+    </div>
+  </details>
+
+  <!-- ===================== ПРОЧЕЕ ===================== -->
+  <details class="block other" open>
+    <summary>
+      <span class="block-icon">🛠</span>
+      <div class="block-meta">
+        <span class="block-title">Прочее: тех-долг, баги, улучшения</span>
+        <span class="block-tagline">Отзывы, чат, карточка товара, фиксы UX и интеграций</span>
+      </div>
+      <div class="block-progress">
+        <div class="pb"><div class="pf" style="width:19%"></div></div>
+        <div class="pn"><b>5</b> / 26 сделано</div>
+      </div>
+      <svg class="chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4l4 4-4 4"/></svg>
+    </summary>
+    <div class="block-body">
+
+      <div class="scope-desc">
+        <p><span class="label must">Входит в релиз</span> <b>Отзывы по&nbsp;заказу</b>, <b>фильтрация по&nbsp;городу — только Московская область</b>, фикс багов с&nbsp;<b>адресами на&nbsp;английском</b>, <b>чат на&nbsp;WebView</b> в&nbsp;приложении, обновлённая <b>карточка товара</b> (делим на&nbsp;3 части под наполнение), <b>дата возврата вещей</b> в&nbsp;отзыве/заказе, <b>анимации</b> при нажатии кнопок и&nbsp;сторис, фикс <b>пустого экрана при оформлении без авторизации</b>.</p>
+        <p><span class="label no">Не входит</span> Доп.&nbsp;реквизиты для ковров (форма), фикс двойного заказа, поиск по&nbsp;альтернативным названиям, управление сторис/акциями через сегментацию и&nbsp;d-max — отложены в&nbsp;Nice-to-have.</p>
+      </div>
+
+      <div class="tasks-h">Задачи в релизе · 26</div>
+      <ul class="tasks">
+
+        <li>
+          <span class="tick done" title="Сделано">✓</span>
+          <div class="task-body">
+            <div class="task-text done-text">Клиент может оформить заказ без авторизации — фикс бага с пустым экраном на этапе оформления.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-app/issues/264" target="_blank" rel="noopener">norma-app#264</a></div>
+          </div>
+          <span class="status-pill done">Сделано</span>
+        </li>
+
+        <li>
+          <span class="tick done" title="Сделано">✓</span>
+          <div class="task-body">
+            <div class="task-text done-text">В заказе теперь корректно отображается имя клиента — раньше вместо имени подставлялся телефон или email.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/88" target="_blank" rel="noopener">norma-backend#88</a></div>
+          </div>
+          <span class="status-pill done">Сделано</span>
+        </li>
+
+        <li>
+          <span class="tick done" title="Сделано">✓</span>
+          <div class="task-body">
+            <div class="task-text done-text">В акции встроена кнопка «Скачать приложение» — пользователь приложения видит её и может перейти в стор.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/80" target="_blank" rel="noopener">norma-backend#80</a></div>
+          </div>
+          <span class="status-pill done">Сделано</span>
+        </li>
+
+        <li>
+          <span class="tick done" title="Сделано">✓</span>
+          <div class="task-body">
+            <div class="task-text done-text">Для акций можно настраивать разные блоки контента и кнопки отдельно для приложения и сайта.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-webapp/issues/154" target="_blank" rel="noopener">norma-webapp#154</a></div>
+          </div>
+          <span class="status-pill done">Сделано</span>
+        </li>
+
+        <li>
+          <span class="tick done" title="Сделано">✓</span>
+          <div class="task-body">
+            <div class="task-text done-text">Разобран и устранён сбой создания заказа в АГБИС с повторной выгрузкой — заказы доезжают до учётной системы корректно.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/73" target="_blank" rel="noopener">norma-backend#73</a></div>
+          </div>
+          <span class="status-pill done">Сделано</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="Делается"></span>
+          <div class="task-body">
+            <div class="task-text">В приложении появляется чат с поддержкой через <b>WebView</b> (HelpDeskEddy). Нативный SDK-вариант — пост-релиз, в&nbsp;Nice-to-have.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-app/issues/268" target="_blank" rel="noopener">norma-app#268</a></div>
+          </div>
+          <span class="status-pill doing">Делается</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="Делается"></span>
+          <div class="task-body">
+            <div class="task-text">В заказе и отзыве показывается дата возврата вещей — клиент видит, когда ждать вещи обратно.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-app/issues/273" target="_blank" rel="noopener">norma-app#273</a></div>
+          </div>
+          <span class="status-pill doing">Делается</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="Делается"></span>
+          <div class="task-body">
+            <div class="task-text">Клиент видит комментарий технолога в карточке заказа — отдельный сценарий просмотра.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-app/issues/214" target="_blank" rel="noopener">norma-app#214</a></div>
+          </div>
+          <span class="status-pill doing">Делается</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="Делается"></span>
+          <div class="task-body">
+            <div class="task-text">В заказе показываются фото и подпись курьера, полученные из Телетрек — подтверждение приёма/выдачи.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/41" target="_blank" rel="noopener">norma-backend#41</a></div>
+          </div>
+          <span class="status-pill doing">Делается</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="Делается"></span>
+          <div class="task-body">
+            <div class="task-text">Готов API для отправки отзыва о заказе — клиент может оставить оценку и текст после выполнения заказа.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/30" target="_blank" rel="noopener">norma-backend#30</a></div>
+          </div>
+          <span class="status-pill doing">Делается</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="Делается"></span>
+          <div class="task-body">
+            <div class="task-text">Отзывы клиентов собираются и отображаются в админке — оператор видит весь поток обратной связи.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/82" target="_blank" rel="noopener">norma-backend#82</a></div>
+          </div>
+          <span class="status-pill doing">Делается</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="Делается"></span>
+          <div class="task-body">
+            <div class="task-text">Корректно создаются задачи в Телетрек на забор и отдачу — синхронизация курьерских задач работает в обе стороны.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/49" target="_blank" rel="noopener">norma-backend#49</a></div>
+          </div>
+          <span class="status-pill doing">Делается</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="Делается"></span>
+          <div class="task-body">
+            <div class="task-text">Клиент может изменить дату забора — изменение прокидывается через API АГБИС и синхронизируется с Телетрек.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/61" target="_blank" rel="noopener">norma-backend#61</a></div>
+          </div>
+          <span class="status-pill doing">Делается</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="Делается"></span>
+          <div class="task-body">
+            <div class="task-text">Картинки товаров грузятся быстрее — оптимизирован вес изображений для каталога и карточек.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/74" target="_blank" rel="noopener">norma-backend#74</a></div>
+          </div>
+          <span class="status-pill doing">Делается</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="Делается"></span>
+          <div class="task-body">
+            <div class="task-text">Текст из админки корректно отображается в сторис — фикс бага, когда сторис показывалась без подписи.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/81" target="_blank" rel="noopener">norma-backend#81</a></div>
+          </div>
+          <span class="status-pill doing">Делается</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="Делается"></span>
+          <div class="task-body">
+            <div class="task-text">При верификации MAX используется в приоритете над Telegram — стабильнее доставка кодов.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/24" target="_blank" rel="noopener">norma-backend#24</a></div>
+          </div>
+          <span class="status-pill doing">Делается</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="Делается"></span>
+          <div class="task-body">
+            <div class="task-text">На странице «Цены» добавлен фильтр «Все» и больше воздуха перед футером — список читается чище.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-webapp/issues/393" target="_blank" rel="noopener">norma-webapp#393</a></div>
+          </div>
+          <span class="status-pill doing">Делается</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="Делается"></span>
+          <div class="task-body">
+            <div class="task-text">На статусе «Готов к отправке» больше не показывается кнопка «Уточню позже» — лишний путь убран.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-webapp/issues/337" target="_blank" rel="noopener">norma-webapp#337</a></div>
+          </div>
+          <span class="status-pill doing">Делается</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="Делается"></span>
+          <div class="task-body">
+            <div class="task-text">В карточке товара подключено поле «Описание товара» — контент-менеджер может наполнить карточку.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-webapp/issues/376" target="_blank" rel="noopener">norma-webapp#376</a></div>
+          </div>
+          <span class="status-pill doing">Делается</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="Делается"></span>
+          <div class="task-body">
+            <div class="task-text">Футер корректно позиционируется на iOS — фикс [SITE-045].</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-webapp/issues/90" target="_blank" rel="noopener">norma-webapp#90</a></div>
+          </div>
+          <span class="status-pill doing">Делается</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="Делается"></span>
+          <div class="task-body">
+            <div class="task-text">Кнопка «Построить маршрут» на Яндекс.Картах снова работает — фикс [SITE-047].</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-webapp/issues/128" target="_blank" rel="noopener">norma-webapp#128</a></div>
+          </div>
+          <span class="status-pill doing">Делается</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="Делается"></span>
+          <div class="task-body">
+            <div class="task-text">У подкатегорий товаров отображается «от» перед ценой — клиент сразу понимает диапазон.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-webapp/issues/394" target="_blank" rel="noopener">norma-webapp#394</a></div>
+          </div>
+          <span class="status-pill doing">Делается</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="Делается"></span>
+          <div class="task-body">
+            <div class="task-text">Поправлены стили на странице «Цены» — таблица и заголовки выглядят согласованно.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-webapp/issues/375" target="_blank" rel="noopener">norma-webapp#375</a></div>
+          </div>
+          <span class="status-pill doing">Делается</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="Делается"></span>
+          <div class="task-body">
+            <div class="task-text">Поиск адресов отдаёт приоритет Москве и Санкт-Петербургу — релевантные подсказки выше.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-webapp/issues/382" target="_blank" rel="noopener">norma-webapp#382</a></div>
+          </div>
+          <span class="status-pill doing">Делается</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="Делается"></span>
+          <div class="task-body">
+            <div class="task-text">SEO-страница «Цены» — отдельный публичный лендинг с тарифами для поискового трафика.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/23" target="_blank" rel="noopener">norma-backend#23</a></div>
+          </div>
+          <span class="status-pill doing">Делается</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="Делается"></span>
+          <div class="task-body">
+            <div class="task-text">Комментарий технолога из АГБИС подтягивается в заказ — клиент и оператор видят одинаковый текст.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/26" target="_blank" rel="noopener">norma-backend#26</a></div>
+          </div>
+          <span class="status-pill doing">Делается</span>
+        </li>
+
+      </ul>
+    </div>
+  </details>
+
+  <!-- ===================== NICE TO HAVE / POST-RELEASE ===================== -->
+  <div class="section-h"><h2>Nice-to-have · пост-релиз</h2><span class="h-meta">не входит в&nbsp;Alpha, реализуем позже · 29 задач + скоуп-решения</span></div>
+
+  <details class="block nice" open>
+    <summary>
+      <span class="block-icon">📦</span>
+      <div class="block-meta">
+        <span class="block-title">Что не вошло в первый релиз</span>
+        <span class="block-tagline">Скоуп-решения, задачи Nice-to-have и доп. замечания от Михаила</span>
+      </div>
+      <div class="block-progress">
+        <div class="pn"><b>2</b> / 29 уже сделано</div>
+      </div>
+      <svg class="chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4l4 4-4 4"/></svg>
+    </summary>
+    <div class="block-body">
+
+      <!-- Scope-level decisions -->
+      <div class="scope-desc">
+        <p><b>Скоуп-решения, которые не вошли в Alpha:</b></p>
+        <ul style="margin:8px 0 0; padding-left:18px;">
+          <li><b>Оплата курьеру банковской картой</b> и&nbsp;модуль matching — после релиза.</li>
+          <li><b>Интеграция с&nbsp;LifePay</b> — альтернативный платёжный канал.</li>
+          <li><b>Остальные группы триггеров уведомлений</b> — в&nbsp;Alpha вошли только 3 группы.</li>
+          <li><b>Скидки от&nbsp;акций</b> — сами акции в Максма не&nbsp;сохраняются, требуется доработка на&nbsp;стороне Максма.</li>
+          <li><b>Полная синхронизация баланса бонусов</b> между АГБИС и&nbsp;Максма — в&nbsp;проработке.</li>
+          <li><b>Видеть конкретного реферала</b> в&nbsp;реферальной программе — сейчас бонус начисляется без&nbsp;связи с&nbsp;реферером.</li>
+          <li><b>Чат в&nbsp;приложении через нативный SDK</b> HelpDeskEddy — в&nbsp;Alpha идёт WebView-вариант, SDK-вариант реализуем позже.</li>
+          <li><b>Доп.&nbsp;реквизиты для ковров</b> в&nbsp;форме заказа (специфика товара) — не&nbsp;успеваем в&nbsp;Alpha.</li>
+          <li><b>Передача адреса заказа в&nbsp;АГБИС</b> — не&nbsp;для маршрутизации курьеров, а&nbsp;для отслеживания и&nbsp;отчётности на&nbsp;стороне АГБИС.</li>
+          <li><b>Описание услуг — фирменный стиль</b>: привести тексты карточек услуг к&nbsp;нашему тону и&nbsp;терминологии (помимо технической задачи #84 о&nbsp;структуре блоков).</li>
+          <li><b>Базовый набор демо-товаров</b> в&nbsp;каталоге — чтобы приложение «не&nbsp;казалось деревянным» при первом запуске.</li>
+          <li><b>Корректный пересчёт площади</b> для ковров и&nbsp;штор — площадь рассчитывалась неверно, нужна сверка формул.</li>
+          <li><b>Спецификация передачи данных в&nbsp;АГБИС</b> — зафиксировать набор полей: контакты, адрес, время, слот.</li>
+          <li><b>Кнопки в&nbsp;акциях МП</b>: переход на&nbsp;каталог или на&nbsp;конкретный заказ (как в&nbsp;сторис), плюс инструкции по&nbsp;созданию кнопок и&nbsp;промокодов в&nbsp;админке.</li>
+          <li><b>Фикс двойного заказа</b>, <b>поиск по альт. названиям</b>, управление сторис/акциями через <b>сегментацию и&nbsp;d-max</b>.</li>
+        </ul>
+      </div>
+
+      <!-- ========= MOBILE ========= -->
+      <div class="tasks-h" style="margin-top:18px">📱 Mobile App · 6 задач</div>
+      <ul class="tasks">
+
+        <li>
+          <span class="tick done" title="Сделано">✓</span>
+          <div class="task-body">
+            <div class="task-text done-text">Анимации при нажатии кнопок и сторис — приложение откликается на действия пользователя.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-app/issues/272" target="_blank" rel="noopener">norma-app#272</a></div>
+          </div>
+          <span class="status-pill done">Сделано</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="В планах"></span>
+          <div class="task-body">
+            <div class="task-text">Корректное отображение режима работы пункта выдачи — переработать парсинг времени.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-app/issues/227" target="_blank" rel="noopener">norma-app#227</a></div>
+          </div>
+          <span class="status-pill doing">В планах</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="В планах"></span>
+          <div class="task-body">
+            <div class="task-text">Клиент может оставить несколько отзывов на один заказ — сейчас доступен только один отзыв.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-app/issues/233" target="_blank" rel="noopener">norma-app#233</a></div>
+          </div>
+          <span class="status-pill doing">В планах</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="В планах"></span>
+          <div class="task-body">
+            <div class="task-text">Геолокация: фикс кнопки определения местоположения — стрелочка не нажимается, пользователя перекидывает на общую картинку.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-app/issues/271" target="_blank" rel="noopener">norma-app#271</a></div>
+          </div>
+          <span class="status-pill doing">В планах</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="В планах"></span>
+          <div class="task-body">
+            <div class="task-text">Каталог: убрать лишнюю пустоту, поисковая строка с категориями не должна уходить за рамки экрана.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-app/issues/274" target="_blank" rel="noopener">norma-app#274</a></div>
+          </div>
+          <span class="status-pill doing">В планах</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="В планах"></span>
+          <div class="task-body">
+            <div class="task-text">В завершённых заказах не показывать фразу про возможность изменить адрес и время — заказ уже закрыт.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-app/issues/275" target="_blank" rel="noopener">norma-app#275</a></div>
+          </div>
+          <span class="status-pill doing">В планах</span>
+        </li>
+
+      </ul>
+
+      <!-- ========= FRONTEND ========= -->
+      <div class="tasks-h" style="margin-top:22px">🖥 Frontend · 1 задача</div>
+      <ul class="tasks">
+
+        <li>
+          <span class="tick doing" title="В планах"></span>
+          <div class="task-body">
+            <div class="task-text">В каталоге для услуги с подуслугами показывать название корневой услуги, а не выбранной подуслуги.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-webapp/issues/392" target="_blank" rel="noopener">norma-webapp#392</a></div>
+          </div>
+          <span class="status-pill doing">В планах</span>
+        </li>
+
+      </ul>
+
+      <!-- ========= BACKEND ========= -->
+      <div class="tasks-h" style="margin-top:22px">⚙ Backend · 21 задача</div>
+      <ul class="tasks">
+
+        <li>
+          <span class="tick done" title="Сделано">✓</span>
+          <div class="task-body">
+            <div class="task-text done-text">API: получение всех позиций конкретного заказа — для админки и интеграций.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/54" target="_blank" rel="noopener">norma-backend#54</a></div>
+          </div>
+          <span class="status-pill done">Сделано</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="В планах"></span>
+          <div class="task-body">
+            <div class="task-text">Интеграция платёжной системы LifePay — альтернативный платёжный канал.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/22" target="_blank" rel="noopener">norma-backend#22</a></div>
+          </div>
+          <span class="status-pill doing">В планах</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="В планах"></span>
+          <div class="task-body">
+            <div class="task-text">Маркетинговые уведомления — лояльность, реактивация, сезонные акции, рефералы, поддержка, онбординг, брошенные корзины, отзывы/UGC + opt-in/consent.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/16" target="_blank" rel="noopener">norma-backend#16</a></div>
+          </div>
+          <span class="status-pill doing">В планах</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="В планах"></span>
+          <div class="task-body">
+            <div class="task-text">Клиент может изменить адрес доставки до этапа «Готов к отправке» включительно.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/47" target="_blank" rel="noopener">norma-backend#47</a></div>
+          </div>
+          <span class="status-pill doing">В планах</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="В планах"></span>
+          <div class="task-body">
+            <div class="task-text">Правильный порядок категорий быстрого заказа — по дизайну.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/65" target="_blank" rel="noopener">norma-backend#65</a></div>
+          </div>
+          <span class="status-pill doing">В планах</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="В планах"></span>
+          <div class="task-body">
+            <div class="task-text">Оптимизация API: варианты изображений (webp, avif, optimize) для приложения — быстрее загрузка.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/78" target="_blank" rel="noopener">norma-backend#78</a></div>
+          </div>
+          <span class="status-pill doing">В планах</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="В планах"></span>
+          <div class="task-body">
+            <div class="task-text">Подтовары находятся через поиск — расширение релевантности.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/53" target="_blank" rel="noopener">norma-backend#53</a></div>
+          </div>
+          <span class="status-pill doing">В планах</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="В планах"></span>
+          <div class="task-body">
+            <div class="task-text">Слоты доставки для Санкт-Петербурга отображаются корректно — сейчас не показываются.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/63" target="_blank" rel="noopener">norma-backend#63</a></div>
+          </div>
+          <span class="status-pill doing">В планах</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="В планах"></span>
+          <div class="task-body">
+            <div class="task-text">Расширенное логирование на бэке + удобный поиск логов в админке — упрощает диагностику.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/25" target="_blank" rel="noopener">norma-backend#25</a></div>
+          </div>
+          <span class="status-pill doing">В планах</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="В планах"></span>
+          <div class="task-body">
+            <div class="task-text">Роли пользователей: возможность редактирования и удаления.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/56" target="_blank" rel="noopener">norma-backend#56</a></div>
+          </div>
+          <span class="status-pill doing">В планах</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="В планах"></span>
+          <div class="task-body">
+            <div class="task-text">Синхронизация сущностей между интеграциями при любом редактировании — изменения корректно прокидываются во все системы.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/59" target="_blank" rel="noopener">norma-backend#59</a></div>
+          </div>
+          <span class="status-pill doing">В планах</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="В планах"></span>
+          <div class="task-body">
+            <div class="task-text">Настройка АГБИС: автоматическое подтверждение онлайн-заказов.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/58" target="_blank" rel="noopener">norma-backend#58</a></div>
+          </div>
+          <span class="status-pill doing">В планах</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="В планах"></span>
+          <div class="task-body">
+            <div class="task-text">АГБИС: отслеживание статуса «Готов к выдаче в&nbsp;ПП» — клиент видит, что заказ готов в пункте приёма.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/40" target="_blank" rel="noopener">norma-backend#40</a></div>
+          </div>
+          <span class="status-pill doing">В планах</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="В планах"></span>
+          <div class="task-body">
+            <div class="task-text">Расширенный поиск по услугам — больше совпадений и точнее результаты.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/77" target="_blank" rel="noopener">norma-backend#77</a></div>
+          </div>
+          <span class="status-pill doing">В планах</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="В планах"></span>
+          <div class="task-body">
+            <div class="task-text">В админке для сторис можно задать название — сейчас в списке сторис нет такой возможности.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/83" target="_blank" rel="noopener">norma-backend#83</a></div>
+          </div>
+          <span class="status-pill doing">В планах</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="В планах"></span>
+          <div class="task-body">
+            <div class="task-text">Страница услуги: блоки «Описание», «Что входит в химчистку», «Требования к материалам».</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/84" target="_blank" rel="noopener">norma-backend#84</a></div>
+          </div>
+          <span class="status-pill doing">В планах</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="В планах"></span>
+          <div class="task-body">
+            <div class="task-text">Поиск по каталогу: фикс для категории «Кожа и&nbsp;мех» + поиск по альтернативным названиям товаров.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/85" target="_blank" rel="noopener">norma-backend#85</a></div>
+          </div>
+          <span class="status-pill doing">В планах</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="В планах"></span>
+          <div class="task-body">
+            <div class="task-text">Сопоставление услуг между АГБИС и приложением — альтернативные услуги при расхождениях номенклатуры.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/87" target="_blank" rel="noopener">norma-backend#87</a></div>
+          </div>
+          <span class="status-pill doing">В планах</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="В планах"></span>
+          <div class="task-body">
+            <div class="task-text">Filament-админка: редактирование адреса, слотов и состава заказа — оператор управляет заказом из одного интерфейса.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/62" target="_blank" rel="noopener">norma-backend#62</a></div>
+          </div>
+          <span class="status-pill doing">В планах</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="В планах"></span>
+          <div class="task-body">
+            <div class="task-text">Пункты приёма: понятное отображение режима работы (вместо текущей «азбуки Морзе»).</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/60" target="_blank" rel="noopener">norma-backend#60</a></div>
+          </div>
+          <span class="status-pill doing">В планах</span>
+        </li>
+
+        <li>
+          <span class="tick doing" title="В планах"></span>
+          <div class="task-body">
+            <div class="task-text">Привести в порядок статусы заказов в бэке — фикс бага №37.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/norma-backend/issues/43" target="_blank" rel="noopener">norma-backend#43</a></div>
+          </div>
+          <span class="status-pill doing">В планах</span>
+        </li>
+
+      </ul>
+
+      <!-- ========= X2BANK ========= -->
+      <div class="tasks-h" style="margin-top:22px">🏦 X2Bank · 1 задача</div>
+      <ul class="tasks">
+
+        <li>
+          <span class="tick doing" title="В планах"></span>
+          <div class="task-body">
+            <div class="task-text">В завершённом заказе остаётся текст про возможность изменить адрес и время — убрать для закрытых заказов.</div>
+            <div class="task-meta"><a class="src" href="https://github.com/x2-agency/x2Bank-mobile-app/issues/20" target="_blank" rel="noopener">x2Bank-mobile-app#20</a></div>
+          </div>
+          <span class="status-pill doing">В планах</span>
+        </li>
+
+      </ul>
+
+    </div>
+  </details>
+
+  <footer>
+    Скоуп Alpha-релиза · обновлено 2026-05-01 · источник —
+    <a href="https://x2-agency.github.io/norma-status/" target="_blank" rel="noopener">norma-status</a>
+  </footer>
+
+</div>
+</body>
+</html>
